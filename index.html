@@ -6,6 +6,12 @@
 <meta name="theme-color" content="#4ba7ca" />
 <title>食谱天下 · Watercolour Recipe</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234ba7ca'/%3E%3Ctext x='50%25' y='54%25' font-size='38' text-anchor='middle' fill='%23fff' font-family='Arial'%3E🍯%3C/text%3E%3C/svg%3E" />
+
+<!-- 字体：手写标题 + 圆润可爱正文 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=ZCOOL+KuaiLe&family=ZCOOL+XiaoWei&family=Long+Cang&display=swap" rel="stylesheet">
+
 <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -23,10 +29,21 @@
   <!-- ========== 顶部条 ========== -->
   <header class="topbar">
     <div class="brand">
-      <div class="brand-mark">🍯</div>
+      <div class="brand-mark">
+        <svg viewBox="0 0 64 64" width="38" height="38" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#ffd4dc"/>
+              <stop offset="100%" stop-color="#b9e4f1"/>
+            </linearGradient>
+          </defs>
+          <path d="M32 8 C18 8, 8 18, 8 30 C8 44, 32 56, 32 56 C32 56, 56 44, 56 30 C56 18, 46 8, 32 8 Z" fill="url(#bg)"/>
+          <text x="32" y="38" font-size="22" text-anchor="middle" fill="#fff" font-family="serif">🍯</text>
+        </svg>
+      </div>
       <div>
-        <h1>食谱天下</h1>
-        <small>Watercolour Recipe · 无限记录你的味道</small>
+        <h1 class="title-script">食谱天下</h1>
+        <small>Watercolour Recipe · 收藏每一道好味道</small>
       </div>
     </div>
     <div class="topbar-tools">
@@ -40,7 +57,7 @@
 
   <!-- ========== 底部 ========== -->
   <footer class="footbar">
-    <span>本地保存 · IndexedDB · 无后端 · 无广告</span>
+    <span>本地保存 · IndexedDB · 无限量记录你的味道 🍯</span>
   </footer>
 
 </div>
@@ -49,10 +66,10 @@
 <div class="modal-mask" id="searchModal" hidden>
   <div class="modal watercard">
     <div class="modal-head">
-      <h3>🔍 食谱搜索</h3>
+      <h3 class="title-script-md">🔍 食谱搜索</h3>
       <button class="icon-btn close-x" data-close>✕</button>
     </div>
-    <input id="searchInput" type="search" placeholder="搜索食谱名称、食材…"/>
+    <input id="searchInput" type="search" placeholder="搜索食谱名称、分类、食材…"/>
     <div id="searchResults" class="search-results"></div>
   </div>
 </div>
@@ -61,7 +78,7 @@
 <div class="modal-mask" id="backupModal" hidden>
   <div class="modal watercard">
     <div class="modal-head">
-      <h3>☁️ 食谱备份 &amp; 恢复</h3>
+      <h3 class="title-script-md">☁️ 食谱备份 &amp; 恢复</h3>
       <button class="icon-btn close-x" data-close>✕</button>
     </div>
     <p class="modal-tips">把全部食谱（含照片 Base64）导出为 JSON。换手机时再导入。</p>
@@ -87,20 +104,3 @@
 <script src="app.js"></script>
 </body>
 </html>
-<script>
-window.addEventListener('load', () => {
-  setTimeout(() => {
-    const out = JSON.stringify({
-      catCount: document.querySelectorAll('.cat-card').length,
-      viewLen: document.getElementById('view')?.innerHTML?.length || 0,
-      viewSnippet: (document.getElementById('view')?.innerHTML || '').slice(0, 80),
-      hasDB: !!window.RecipeDB,
-      hasUid: !!window.uid,
-      err: window.__lastErr || null,
-    });
-    document.title = 'DUMP:' + out;
-  }, 2500);
-});
-window.addEventListener('error', (e) => { window.__lastErr = (e.error && (e.error.stack||e.error.message)) || e.message; });
-window.addEventListener('unhandledrejection', (e) => { window.__lastErr = (e.reason && (e.reason.stack||e.reason.message)) || String(e.reason); });
-</script>

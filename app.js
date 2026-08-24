@@ -1,6 +1,6 @@
 /* =========================================
-   app.js · 食谱天下
-   - 单页应用（hash 路由：#/cat/xxx, #/r/xxx, #/edit/xxx）
+   app.js · 食谱天下 v2
+   - 单页应用（hash 路由）
    - 首页：分类卡片（无 sidebar）
    - 搜索 / 备份恢复 / 收藏 / A4 打印 / PDF 分享
    ========================================= */
@@ -39,7 +39,7 @@
     t.textContent = msg;
     t.hidden = false;
     clearTimeout(toast._t);
-    toast._t = setTimeout(()=> t.hidden = true, 1700);
+    toast._t = setTimeout(()=> t.hidden = true, 1800);
   }
   function escapeHTML(s){
     if (s==null) return "";
@@ -58,7 +58,6 @@
     return (...a) => { clearTimeout(id); id = setTimeout(()=>fn(...a), ms); };
   }
 
-  // 图片 → dataURL
   function fileToDataURL(file, max=1280, q=0.82){
     return new Promise((resolve, reject) => {
       if(!file) return resolve(null);
@@ -89,8 +88,7 @@
   function go(hash){ location.hash = hash; }
   function parseHash(){
     const h = location.hash.replace(/^#/, "") || "/";
-    const parts = h.split("/").filter(Boolean);
-    return parts; // [""] or ["cat","chicken"] or ["r","id"] or ["edit","id"] or ["new","chicken"]
+    return h.split("/").filter(Boolean);
   }
   function route(){
     const p = parseHash();
@@ -109,8 +107,9 @@
     view.innerHTML = `
       <section class="page-home">
         <div class="hero">
-          <h2>今天想做什么？🍯</h2>
-          <p>从下面挑一个分类，记录无限量食谱 · 永久保存在本机</p>
+          <div class="deco-emoji">🍓</div>
+          <h2>把喜欢的味道，<br/>好好收藏 ✨</h2>
+          <p>照片、材料、步骤与灵感，都留在自己的小小食谱书里。</p>
           <div class="stats">
             <span>📚 共 ${stats.total} 个食谱</span>
             <span>❤️ 收藏 ${stats.fav}</span>
@@ -118,12 +117,18 @@
           </div>
         </div>
 
+        <div class="cat-title">
+          <h3>美味分类</h3>
+          <div class="deco"></div>
+          <span class="pill">${stats.total} 份食谱</span>
+        </div>
+
         <div class="cat-grid">
           ${CATEGORIES.map(c => `
             <button class="cat-card" data-go="cat/${c.id}" style="--card-bg:${c.bg}">
               <div class="cat-emoji">${c.emoji}</div>
               <div class="cat-name">${c.name}</div>
-              <span class="cat-count">📖 ${stats.byCat[c.id] || 0} 个</span>
+              <span class="cat-count">📖 ${stats.byCat[c.id] || 0} 份</span>
             </button>
           `).join("")}
         </div>
@@ -132,7 +137,7 @@
     $$(".cat-card", view).forEach(b => b.addEventListener("click", () => go(b.dataset.go)));
   }
 
-  // ============ 分类页：食谱列表 ============
+  // ============ 分类页 ============
   async function renderCategory(catId){
     const cat = CAT_MAP[catId] || { id:catId, name:catId, emoji:"🍽️", bg:"#eee" };
     const list = await RecipeDB.listByCategory(cat.id);
@@ -151,9 +156,10 @@
         ${list.length === 0 ? `
           <div class="empty">
             <div class="big-emoji">🍯</div>
-            <p>还没有食谱，点击上方按钮开启第一篇吧～</p>
+            <p>还没有食谱，点上方按钮开启第一篇吧～</p>
           </div>
         ` : `
+          <div class="cat-title"><h3>我的${cat.name}食谱</h3><div class="deco"></div><span class="pill">${list.length} 篇</span></div>
           <div class="recipe-list">
             ${list.map(r => recipeRow(r, cat)).join("")}
           </div>
@@ -254,7 +260,7 @@
         ${ (r.notes) ? `
           <div class="section">
             <h2>📝 小贴士</h2>
-            <div style="white-space:pre-wrap; line-height:1.7; color:var(--ink-soft);">${escapeHTML(r.notes)}</div>
+            <div style="white-space:pre-wrap; line-height:1.8; color:var(--ink-soft); font-family:'ZCOOL XiaoWei', serif; font-size:15px;">${escapeHTML(r.notes)}</div>
           </div>
         ` : "" }
       </section>
@@ -303,7 +309,7 @@
         <div class="form" style="padding: 0 4px;">
 
           <div>
-            <label>分类</label>
+            <label>📂 选择分类</label>
             <div class="chips" id="catChips">
               ${CATEGORIES.map(c => `
                 <span class="chip ${c.id===r.category?"active":""}" data-cat="${c.id}">${c.emoji} ${c.name}</span>
@@ -312,40 +318,40 @@
           </div>
 
           <div>
-            <label>食谱名称 *</label>
+            <label>🍯 食谱名称</label>
             <input id="f_name" placeholder="例：番茄炒蛋" value="${escapeHTML(r.name)}"/>
           </div>
 
           <div class="row-line">
             <div>
-              <label>份量</label>
-              <input id="f_servings" placeholder="例：2 人份" value="${escapeHTML(r.servings||"")}"/>
+              <label>🍽 份量</label>
+              <input id="f_servings" placeholder="2 人份" value="${escapeHTML(r.servings||"")}"/>
             </div>
             <div>
-              <label>备料时间</label>
-              <input id="f_prep" placeholder="例：10 分钟" value="${escapeHTML(r.prepTime||"")}"/>
+              <label>⏱ 备料</label>
+              <input id="f_prep" placeholder="10 分钟" value="${escapeHTML(r.prepTime||"")}"/>
             </div>
             <div>
-              <label>烹饪时间</label>
-              <input id="f_cook" placeholder="例：15 分钟" value="${escapeHTML(r.cookTime||"")}"/>
+              <label>🔥 烹饪</label>
+              <input id="f_cook" placeholder="15 分钟" value="${escapeHTML(r.cookTime||"")}"/>
             </div>
           </div>
 
           <div>
-            <label>🥣 食材（点 ✚ 增加，滑出可删除）</label>
+            <label>🥣 食材</label>
             <div id="ingBox"></div>
           </div>
 
           <div>
-            <label>👩🏻‍🍳 步骤（自动编号；点 ✚ 增加）</label>
+            <label>👩🏻‍🍳 步骤</label>
             <div id="stepBox"></div>
           </div>
 
           <div>
-            <label>📷 照片（多张随你加，自动压缩保存到本机）</label>
+            <label>📷 照片（可多张，自动压缩）</label>
             <label class="upload-area" id="uploadArea">
-              <div>🖼 点这里选择照片 · 或把照片拖进来</div>
-              <div style="margin-top:6px; font-size:12px;">支持一次性多选 · JPG/PNG</div>
+              <div style="font-size: 16px; color: var(--primary-deep);">🖼 点这里选择照片 · 或把照片拖进来</div>
+              <div style="margin-top:6px; font-size:12px;">支持一次性多选 · JPG/PNG · 本机保存</div>
               <input type="file" id="photoInput" accept="image/*" multiple hidden />
             </label>
             <div class="gallery" id="gallery" style="margin-top:10px;"></div>
@@ -364,17 +370,15 @@
       </section>
     `;
 
-    // 分类切换
     $$("#catChips .chip").forEach(c => c.addEventListener("click", () => {
       r.category = c.dataset.cat;
       $$("#catChips .chip").forEach(x => x.classList.toggle("active", x===c));
     }));
 
-    // ========== 食材块 ==========
     const ingBox = $("#ingBox");
     function renderIngs(){
       ingBox.innerHTML = (r.ingredients||[]).map((i, idx) => ingRow(i, idx)).join("") + `
-        <button class="big-btn ghost" id="addIng" style="margin-top:6px;">＋ 添加食材</button>
+        <button class="big-btn ghost" id="addIng" style="margin-top:10px;">＋ 添加食材</button>
       `;
       $$(".ing-row").forEach(row => {
         const idx = +row.dataset.idx;
@@ -387,7 +391,6 @@
       $("#addIng").addEventListener("click", () => {
         r.ingredients.push({ name:"", qty:"" });
         renderIngs();
-        // 滚动并聚焦到新行
         const rows = $$(".ing-row");
         const last = rows[rows.length-1];
         last && last.querySelector(".ing-name") && last.querySelector(".ing-name").focus();
@@ -395,7 +398,7 @@
     }
     function ingRow(i, idx){
       return `
-        <div class="row-line ing-row" data-idx="${idx}" style="margin-bottom:6px;">
+        <div class="row-line ing-row" data-idx="${idx}" style="margin-bottom:8px;">
           <input class="ing-name" placeholder="食材名" value="${escapeHTML(i.name||"")}"/>
           <input class="ing-qty"  placeholder="份量" value="${escapeHTML(i.qty||"")}"/>
           <button class="big-btn ghost ing-del" style="flex:0 0 auto; padding:10px 12px;">🗑</button>
@@ -404,11 +407,10 @@
     }
     renderIngs();
 
-    // ========== 步骤块 ==========
     const stepBox = $("#stepBox");
     function renderSteps(){
       stepBox.innerHTML = (r.steps||[]).map((s, idx) => stepRow(s, idx)).join("") + `
-        <button class="big-btn ghost" id="addStep" style="margin-top:6px;">＋ 添加步骤</button>
+        <button class="big-btn ghost" id="addStep" style="margin-top:10px;">＋ 添加步骤</button>
       `;
       $$(".step-row").forEach(row => {
         const idx = +row.dataset.idx;
@@ -428,9 +430,9 @@
     function stepRow(s, idx){
       const n = String(idx+1).padStart(2,"0");
       return `
-        <div class="row-line step-row" data-idx="${idx}" style="margin-bottom:6px; align-items:flex-start;">
-          <div style="flex:0 0 36px; height:42px; border-radius:14px; display:grid; place-items:center;
-                      background:linear-gradient(135deg,var(--primary),var(--pink-deep)); color:#fff; font-weight:700;">
+        <div class="row-line step-row" data-idx="${idx}" style="margin-bottom:8px; align-items:flex-start;">
+          <div style="flex:0 0 40px; height:46px; border-radius:16px; display:grid; place-items:center;
+                      background:linear-gradient(135deg,var(--primary),var(--pink-deep)); color:#fff; font-weight:700; font-family:var(--font-script); font-size:18px;">
             ${n}
           </div>
           <textarea class="step-text" rows="2" placeholder="第 ${idx+1} 步…">${escapeHTML(s||"")}</textarea>
@@ -440,7 +442,6 @@
     }
     renderSteps();
 
-    // ========== 照片 ==========
     const photoInput = $("#photoInput");
     const uploadArea = $("#uploadArea");
     const gallery = $("#gallery");
@@ -452,7 +453,7 @@
         </div>
       `).join("") + `
         <label class="ph" style="cursor:pointer; background:linear-gradient(135deg,#ffd7df,#cfe9f4);">
-          <div style="font-size:30px;">＋</div>
+          <div style="font-size:32px;">＋</div>
           <input type="file" accept="image/*" multiple id="addMorePhotos" style="display:none"/>
         </label>
       `;
@@ -484,7 +485,6 @@
       await handlePhotos(e.target.files);
       e.target.value = "";
     });
-    // 拖拽
     uploadArea.addEventListener("dragover", e => { e.preventDefault(); uploadArea.style.background="#fff"; });
     uploadArea.addEventListener("dragleave", e => { e.preventDefault(); uploadArea.style.background=""; });
     uploadArea.addEventListener("drop", async e => {
@@ -493,14 +493,12 @@
     });
     renderPhotos();
 
-    // 保存
     function collectText(){
       r.name = $("#f_name").value.trim();
       r.servings = $("#f_servings").value.trim();
       r.prepTime = $("#f_prep").value.trim();
       r.cookTime = $("#f_cook").value.trim();
       r.notes = $("#f_notes").value.trim();
-      // 清理空
       r.ingredients = (r.ingredients||[]).filter(i => (i.name||"").trim() || (i.qty||"").trim())
                                           .map(i => ({ name:(i.name||"").trim(), qty:(i.qty||"").trim() }));
       r.steps = (r.steps||[]).map(s => (s||"").trim()).filter(Boolean);
@@ -522,7 +520,7 @@
   function buildPrintHTML(r){
     const cat = CAT_MAP[r.category] || { name: r.category, emoji:"🍴" };
     const photos = (r.photos||[]);
-    const cover = photos[0] ? `<img src="${photos[0]}" style="width:100%; max-height:80mm; object-fit:cover; border-radius:6mm;">` : "";
+    const cover = photos[0] ? `<img src="${photos[0]}" style="width:100%; max-height:90mm; object-fit:cover; border-radius:6mm;">` : "";
     const restPhotos = photos.slice(1);
     const ings = (r.ingredients||[]).map(i => `
       <div class="ing">${escapeHTML(i.name)} ${i.qty? "· "+escapeHTML(i.qty):""}</div>
@@ -530,7 +528,7 @@
     const steps = (r.steps||[]).map((s, i) => `
       <div class="step">
         <div class="num">${i+1}</div>
-        <div>${escapeHTML(s)}</div>
+        <div class="text">${escapeHTML(s)}</div>
       </div>
     `).join("");
     return `
@@ -576,7 +574,6 @@
     const area = $("#printArea");
     area.innerHTML = buildPrintHTML(r);
     area.style.display = "block";
-    // 等待图片加载完成后再打印
     const imgs = $$("img", area);
     const wait = imgs.length ? Promise.all(imgs.map(img => img.complete ? Promise.resolve() : new Promise(res => { img.onload = img.onerror = res; }))) : Promise.resolve();
     wait.then(() => {
@@ -585,7 +582,6 @@
     });
   }
 
-  // ============ PDF 分享（打印为 PDF） ============
   async function shareRecipePDF(r){
     const area = $("#printArea");
     area.innerHTML = buildPrintHTML(r);
@@ -593,8 +589,7 @@
     const imgs = $$("img", area);
     const wait = imgs.length ? Promise.all(imgs.map(img => img.complete ? Promise.resolve() : new Promise(res => { img.onload = img.onerror = res; }))) : Promise.resolve();
     await wait;
-    // 提示浏览器打开"打印 → 保存为 PDF"对话框，用户可保存或分享
-    toast("选择「保存为 PDF」即可分享 🍯");
+    toast("选「另存为 PDF」即可分享 🍯");
     setTimeout(()=>{
       window.print();
       setTimeout(()=> { area.style.display = "none"; }, 300);
@@ -609,7 +604,7 @@
     function open(){
       modal.hidden = false;
       input.value = "";
-      results.innerHTML = `<div style="color:var(--ink-soft); padding:10px;">输入关键词搜索…</div>`;
+      results.innerHTML = `<div style="color:var(--ink-soft); padding:14px; font-family:var(--font-script); font-size:18px;">输入关键词搜索 ✨</div>`;
       setTimeout(()=> input.focus(), 30);
     }
     function close(){ modal.hidden = true; }
@@ -617,7 +612,6 @@
     modal.addEventListener("click", e => {
       if (e.target.matches("[data-close], .modal-mask")) close();
     });
-
     const run = debounce(async () => {
       const q = input.value.trim().toLowerCase();
       if(!q){ results.innerHTML = ""; return; }
@@ -627,7 +621,7 @@
         return txt.includes(q);
       });
       if (!hit.length){
-        results.innerHTML = `<div style="color:var(--ink-soft); padding:14px; text-align:center;">没有找到，试试别的词 🍯</div>`;
+        results.innerHTML = `<div style="color:var(--ink-soft); padding:18px; text-align:center; font-family:'ZCOOL XiaoWei',serif;">没有找到，试试别的词 🍯</div>`;
         return;
       }
       results.innerHTML = hit.slice(0, 50).map(r => {
@@ -639,16 +633,15 @@
           <button class="row" data-id="${r.id}">
             ${thumb}
             <div style="flex:1;">
-              <div style="font-weight:600;">${escapeHTML(r.name)}</div>
-              <div style="font-size:12px; color:var(--ink-soft);">${cat.emoji} ${escapeHTML(cat.name)} · ${fmtDate(r.updatedAt)}</div>
+              <div class="name">${escapeHTML(r.name)}</div>
+              <div style="font-size:12px; color:var(--ink-soft); font-family:'ZCOOL XiaoWei',serif;">${cat.emoji} ${escapeHTML(cat.name)} · ${fmtDate(r.updatedAt)}</div>
             </div>
             <div>${r.favorite?"❤️":"🤍"}</div>
           </button>
         `;
       }).join("");
       $$(".row", results).forEach(b => b.addEventListener("click", () => {
-        close();
-        go(`r/${b.dataset.id}`);
+        close(); go(`r/${b.dataset.id}`);
       }));
     }, 160);
     input.addEventListener("input", run);
@@ -663,8 +656,6 @@
     modal.addEventListener("click", e => {
       if (e.target.matches("[data-close], .modal-mask")) close();
     });
-
-    // 导出
     $("#exportBackupBtn").addEventListener("click", async () => {
       const list = await RecipeDB.listAll();
       const payload = {
@@ -678,22 +669,15 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       const ts = new Date().toISOString().replace(/[:.]/g,"-");
-      a.href = url;
-      a.download = `recipes-backup-${ts}.json`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+      a.href = url; a.download = `recipes-backup-${ts}.json`;
+      document.body.appendChild(a); a.click(); a.remove();
       setTimeout(()=> URL.revokeObjectURL(url), 1000);
       toast(`已备份 ${list.length} 个食谱（含照片）📦`);
     });
-
-    // 导入
     $("#importBackupInput").addEventListener("change", async e => {
       const f = e.target.files[0];
       if (!f) return;
-      if (!confirm("导入将合并到现有食谱中（ID 相同则覆盖）。确定继续？")) {
-        e.target.value = ""; return;
-      }
+      if (!confirm("导入将合并到现有食谱中（ID 相同则覆盖）。确定继续？")) { e.target.value = ""; return; }
       try{
         const text = await f.text();
         const data = JSON.parse(text);
@@ -705,27 +689,22 @@
           if (!r.photos) r.photos = [];
           if (!r.ingredients) r.ingredients = [];
           if (!r.steps) r.steps = [];
-          await RecipeDB.put(r);
-          added++;
+          await RecipeDB.put(r); added++;
         }
         toast(`已恢复 ${added} 个食谱 ✨`);
-        close();
-        route();
+        close(); route();
       }catch(err){
         alert("导入失败：" + err.message);
       }finally{
         e.target.value = "";
       }
     });
-
-    // 清空
     $("#clearAllBtn").addEventListener("click", async () => {
       if (!confirm("⚠️ 这会清空所有本地食谱（含照片），不可撤销！建议先备份。继续吗？")) return;
       if (!confirm("再次确认：真的要全部删除吗？")) return;
       await RecipeDB.clear();
       toast("已清空 🧹");
-      close();
-      route();
+      close(); route();
     });
   }
 
@@ -734,7 +713,6 @@
     setupSearch();
     setupBackup();
     route();
-    // 首次进入若数据为空，种入一个示范食谱（方便第一次看到效果）
     (async () => {
       const all = await RecipeDB.listAll();
       if (all.length === 0){
@@ -770,12 +748,9 @@
     })();
   }
 
-  document.addEventListener("DOMContentLoaded", start);
-  // 兜底：若脚本在 DOMContentLoaded 之后才被注入，也能启动
   if (document.readyState === "loading") {
-    // 还在加载 → 等待
+    document.addEventListener("DOMContentLoaded", start);
   } else {
-    // 已加载/完成 → 立刻启动
     start();
   }
 })();
